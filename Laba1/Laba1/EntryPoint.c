@@ -104,15 +104,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             mousePosition.y = HIWORD(lParam);
             if (PtInRect(&obj, mousePosition))
             {
-                obj.top += mousePosition.y - prevMousePosition.y;
-                obj.left += mousePosition.x - prevMousePosition.x;
-                obj.right = obj.left + RECT_WIDTH;
-                obj.bottom = obj.top + RECT_HEIGHT;
-            }
-            InvalidateRect(hWnd, NULL, TRUE);
+                if (!(obj.left < 0 || obj.right > currentWindowSize.right) &&
+                    !(obj.top < 0 || obj.bottom > currentWindowSize.bottom))
+                {
+                    obj.top += mousePosition.y - prevMousePosition.y;
+                    obj.left += mousePosition.x - prevMousePosition.x;
+                    obj.right = obj.left + RECT_WIDTH;
+                    obj.bottom = obj.top + RECT_HEIGHT;
 
-            prevMousePosition.x = mousePosition.x;
-            prevMousePosition.y = mousePosition.y;
+                    if (obj.left < 0) obj.left = 1;
+                    else if (obj.right > currentWindowSize.right) obj.left = currentWindowSize.right - RECT_WIDTH - 0;
+                    if (obj.top < 0) obj.top = 1;
+                    else if (obj.bottom > currentWindowSize.bottom) obj.top = currentWindowSize.bottom - RECT_HEIGHT - 1;
+                }
+                InvalidateRect(hWnd, NULL, TRUE);
+
+                prevMousePosition.x = mousePosition.x;
+                prevMousePosition.y = mousePosition.y;
+
+            }
         }
         break;
     case WM_LBUTTONUP:
@@ -148,6 +158,45 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         }
         InvalidateRect(hWnd, NULL, TRUE);
+        break;
+    case WM_MOUSEWHEEL:
+        if (GetAsyncKeyState(VK_SHIFT))
+        {
+            if (!(obj.left < 0 || obj.right > currentWindowSize.right))
+            {
+                if (GET_WHEEL_DELTA_WPARAM(wParam) > 0)
+                {
+                    obj.left -= ACTIVE_OBJ_SPEED;
+                    obj.right -= ACTIVE_OBJ_SPEED;
+                }
+                else
+                {
+                    obj.left += ACTIVE_OBJ_SPEED;
+                    obj.right += ACTIVE_OBJ_SPEED;
+                }
+                if (obj.left < 0) obj.left = 1;
+                else if (obj.right > currentWindowSize.right) obj.left = currentWindowSize.right - RECT_WIDTH - 0;
+            }
+        }
+        else
+        {
+            if (!(obj.top < 0 || obj.bottom > currentWindowSize.bottom))
+            {
+                if (GET_WHEEL_DELTA_WPARAM(wParam) > 0)
+                {
+                    obj.top += ACTIVE_OBJ_SPEED;
+                    obj.bottom += ACTIVE_OBJ_SPEED;
+                }
+                else
+                {
+                    obj.top -= ACTIVE_OBJ_SPEED;
+                    obj.bottom -= ACTIVE_OBJ_SPEED;
+                }
+                if (obj.top < 0) obj.top = 1;
+                else if (obj.bottom > currentWindowSize.bottom) obj.top = currentWindowSize.bottom - RECT_HEIGHT - 1;
+            }
+        }
+        objControlling = TRUE;
         break;
     case WM_DESTROY:
         PostQuitMessage(0);
