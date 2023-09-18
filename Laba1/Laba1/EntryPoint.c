@@ -2,15 +2,20 @@
 #include <Windowsx.h>
 #include <math.h>
 #include <stdio.h>
+#pragma comment(lib, "Msimg32.lib")
 
 RECT obj;
+
+int objX = 100;
+int objY = 100;
+int sonicSize = 100;
 
 const int WND_WIDTH = 500;
 const int WND_HEIGHT = 500;
 
 const int RECT_WIDTH = 160;
 const int RECT_HEIGHT = 160;
-const int STEP = 10;
+const int STEP = 8;
 
 const int ACTIVE_OBJ_SPEED =  8;
 const int INACTIVE_OBJ_SPEED = 2;
@@ -22,6 +27,8 @@ BOOL objControlling = FALSE;
 
 POINT prevMousePosition;
 
+HBITMAP hBitmap;
+
 #define VK_W 0x57
 #define VK_A 0x41
 #define VK_S 0x53
@@ -32,8 +39,12 @@ POINT prevMousePosition;
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    PAINTSTRUCT paint_struct;
-    HDC hdc;
+    PAINTSTRUCT paintStruct;
+    HDC hdc, hObjDc;
+
+    HDC hdcMem;
+    HGDIOBJ oldBitmap;
+    BITMAP bitmap;
 
     RECT currentWindowSize;
     GetClientRect(hWnd, &currentWindowSize);
@@ -66,24 +77,46 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         default:
             break;
         }
+
+        if (obj.left < 0) obj.left = 0;
+        else if (obj.right > currentWindowSize.right) obj.left = currentWindowSize.right - RECT_WIDTH - 0;
+        if (obj.top < 0) obj.top = 0;
+        else if (obj.bottom > currentWindowSize.bottom) obj.top = currentWindowSize.bottom - RECT_HEIGHT - 0;
+
         objControlling = FALSE;
         InvalidateRect(hWnd, NULL, TRUE);
     case WM_KEYUP:
         objControlling = TRUE;
         break;
     case WM_PAINT:
-        hdc = BeginPaint(hWnd, &paint_struct);
-        obj.right = obj.left + RECT_WIDTH;
-        obj.bottom = obj.top + RECT_HEIGHT;
+    {
+        HDC hdc, hsonicdc;
 
-        SelectObject(hdc, GetStockObject(DC_PEN));
-        SelectObject(hdc, GetStockObject(DC_BRUSH));
-        SetDCBrushColor(hdc, RGB(220,0,0));
-        SetDCPenColor(hdc, RGB(0,0,255));
+        hdc = BeginPaint(hWnd, &paintStruct);
 
-        Rectangle(hdc, obj.left, obj.top, obj.right, obj.bottom);
-        EndPaint(hWnd, &paint_struct);
+        hsonicdc = CreateCompatibleDC(hdc);         
+        SelectObject(hsonicdc, hBitmap);           
+        TransparentBlt(                           
+            hdc,                        
+            obj.left,                      
+            obj.top,                     
+            RECT_WIDTH,                 
+            RECT_HEIGHT,                
+            hsonicdc,             
+            0,                      
+            0,                 
+            sonicSize,       
+            sonicSize,           
+            RGB(0, 143, 0) 
+        );
+
+         // Обновление окна.
+        ValidateRect(hWnd, NULL, NULL);
+
+        DeleteDC(hsonicdc);
+        EndPaint(hWnd, &paintStruct);
         break;
+    }
     case WM_LBUTTONDOWN:;
         POINT mousePosition;
 
@@ -258,8 +291,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     InitializeScene();
 
+    /*hBitmap = LoadImage(hInstance, L"sonicGreenBack.bmp", IMAGE_BITMAP, RECT_WIDTH, RECT_HEIGHT, LR_LOADFROMFILE);*/
+    hBitmap = LoadImage(hInstance, L"sonicGreenBack.bmp", IMAGE_BITMAP, sonicSize, sonicSize, LR_LOADFROMFILE);
+
+    if (hBitmap == NULL)
+        MessageBoxW(hWnd, L"Failed to load image", L"Error", MB_OK);
+
     if (!SetTimer(hWnd, WM_TIMER1, 1, (TIMERPROC)NULL))
-        MessageBox(hWnd, "Timer2 null", L"Error Message", NULL);
+        MessageBox(hWnd, L"Timer1 null", L"Error Message", NULL);
 
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
