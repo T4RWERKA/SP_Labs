@@ -8,7 +8,7 @@ RECT obj;
 
 int objX = 100;
 int objY = 100;
-int sonicSize = 100;
+int sonicSize = 37;
 
 const int WND_WIDTH = 500;
 const int WND_HEIGHT = 500;
@@ -51,7 +51,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     switch (message)
     {
-    case WM_KEYDOWN:
+    /*case WM_KEYDOWN:
         switch (wParam)
         {
         case VK_DOWN:
@@ -90,30 +90,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_PAINT:
     {
-        HDC hdc, hsonicdc;
+        HDC hdc, memdc;
+        HBITMAP oldBmp;
 
         hdc = BeginPaint(hWnd, &paintStruct);
 
-        hsonicdc = CreateCompatibleDC(hdc);         
-        SelectObject(hsonicdc, hBitmap);           
+        memdc = CreateCompatibleDC(hdc);         
+        oldBmp = SelectObject(memdc, hBitmap);
         TransparentBlt(                           
             hdc,                        
             obj.left,                      
             obj.top,                     
             RECT_WIDTH,                 
             RECT_HEIGHT,                
-            hsonicdc,             
+            memdc,             
             0,                      
             0,                 
             sonicSize,       
             sonicSize,           
             RGB(0, 143, 0) 
         );
+        SelectObject(hdc, oldBmp);
 
-         // Обновление окна.
-        ValidateRect(hWnd, NULL, NULL);
-
-        DeleteDC(hsonicdc);
+        DeleteDC(memdc);
         EndPaint(hWnd, &paintStruct);
         break;
     }
@@ -230,7 +229,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         objControlling = TRUE;
-        break;
+        break;*/
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
