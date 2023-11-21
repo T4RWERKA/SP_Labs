@@ -13,10 +13,10 @@ int main()
     BOOL is_replaced;
     DWORD pid;
 
-    std::cin >> pid;
+    /*std::cin >> pid;
     InjectDLL(pid);
 
-    is_replaced = VirtualReplace(data, replacement);
+    is_replaced = VirtualReplace(data, replacement);*/
 
     printf("%s\n", data);
 
@@ -24,7 +24,8 @@ int main()
     TMyFunc ProcAdd;
     BOOL fRunTimeLinkSuccess = FALSE;
 
-    hinstLib = LoadLibrary(TEXT("DLL1.dll"));
+    SetCurrentDirectory(L"d:\\Study\\SP\\SP_Labs\\Laba3\\");
+    hinstLib = LoadLibrary(TEXT("Dll1\\DLL1.dll"));
 
     if (hinstLib != NULL)
     {

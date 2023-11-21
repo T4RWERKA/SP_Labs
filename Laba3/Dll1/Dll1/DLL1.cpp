@@ -1,3 +1,5 @@
+#define DLL1_EXPORTS
+
 #include "pch.h"
 #include "DLL1.h"
 #include <iostream>
